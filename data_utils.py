@@ -191,6 +191,33 @@ def dir(root,type = 'f',addroot = True):
 
         return 0
 
+
+def save_points(scan_points, obj_bbox, out_path):
+    box_x1 = obj_bbox[0]
+    box_y1 = obj_bbox[2]
+    box_z1 = obj_bbox[4]
+    box_x2 = obj_bbox[1]
+    box_y2 = obj_bbox[3]
+    box_z2 = obj_bbox[5]
+    box_l = box_x2 - box_x1
+    box_w = box_z2 - box_z1
+
+    box_points = [[box_x1, box_y1, box_z1],
+                  [box_x1, box_y1, box_z1 + box_w],
+                  [box_x1 + box_l, box_y1, box_z1 + box_w],
+                  [box_x1 + box_l, box_y1, box_z1],
+                  [box_x2, box_y2, box_z2],
+                  [box_x2, box_y2, box_z2 - box_w],
+                  [box_x2 - box_l, box_y2, box_z2 - box_w],
+                  [box_x2 - box_l, box_y2, box_z2]]
+    with open(out_path, "w") as f:
+        for p in box_points:
+            f.writelines("v " + str(p[0]) + " " + str(p[1]) + " " + str(p[2]) + "\n")
+        for p in scan_points:
+            f.writelines("v " + str(p[0]) + " " + str(p[1]) + " " + str(p[2]) + "\n")
+
+    print("save_obj to", out_path)
+
 def save_dataset(scan_points,scan_points_seg,scan_points_label,scene_name,pts_path,seg_path,ply_parh,save_ply = True,use_color_map = False):
 
     print("\nSave dataset:")

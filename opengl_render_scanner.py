@@ -5,6 +5,7 @@ import scipy.misc
 
 import color_tool as color_t
 import obj_tool as objt
+import points_tool
 import points_tool as ptst
 import renderer as renderer
 import data_utils as du
@@ -143,7 +144,7 @@ def virtualscan(model, scan_points, sample_rate):
     scan_point_list = []
     # clip_near = 100
     # clip_far = 150
-    clip_near = 2
+    clip_near = 1
     clip_far = 100
     im_size = (384, 384)
 
@@ -153,9 +154,9 @@ def virtualscan(model, scan_points, sample_rate):
         # Back
         # scan_set_list.append([scp[0], scp[1], scp[2] - clip_near, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0])
         # left
-        # scan_set_list.append([scp[0] - clip_near, scp[1], scp[2], 1.0, 0.0, 0.0, 0.0, 1.0, 0.0])
+        scan_set_list.append([scp[0] - clip_near, scp[1], scp[2], 1.0, 0.0, 0.0, 0.0, 1.0, 0.0])
         # right use this
-        scan_set_list.append([scp[0] + clip_near, scp[1], scp[2], -1.0, 0.0, 0.0, 0.0, 1.0, 0.0])
+        # scan_set_list.append([scp[0] + clip_near, scp[1], scp[2], -1.0, 0.0, 0.0, 0.0, 1.0, 0.0])
 
 
     # scan_ori = random.randint(0,1)
@@ -223,37 +224,65 @@ def virtualscan(model, scan_points, sample_rate):
     return scan_points_m, scan_points_seg_m, scan_points_label_m
 
 
-def test():
-    # plane
-    # model = objt.load_ply("/home/leon/Disk/dataset/Downloads/ShapeNetCore/ShapeNetCore.v2/02691156/"
-    #                       "1a04e3eab45ca15dd86060f189eb133/models/model_normalized.ply")
-    # car1
-    model = objt.load_ply("/home/leon/Disk/dataset/ShapeNetCar/02958343/1a0bc9ab92c915167ae33d942430658c/"
-                          "models/model_normalized.ply")
-    # cup
-    # model = objt.load_obj("/home/leon/Disk/dataset/Downloads/ShapeNetCore/ShapeNetCore.v2/03797390/"
-    #                       "1a1c0a8d4bad82169f0594e65f756cf5/models/model_normalized.obj")
+def circle_scan(obj_path):
+    model = objt.load_obj(obj_path)
+    obj_bbox = objt.obj_getbbox(model['pts'])
+    box_x1 = obj_bbox[0]
+    box_y1 = obj_bbox[2]
+    box_z1 = obj_bbox[4]
+    box_x2 = obj_bbox[1]
+    box_y2 = obj_bbox[3]
+    box_z2 = obj_bbox[5]
+    box_w, box_h, box_l = points_tool.get_box_whl(box_x1, box_y1, box_z1, box_x2, box_y2, box_z2)
 
-    # car2
-    # model = objt.load_ply("/home/leon/Disk/dataset/ShapeNetCar/02958343/1a1dcd236a1e6133860800e6696b8284/"
-    #                       "models/model_normalized.ply")
+    camera_up = [0, 1, 0]
+    clip_near = 1
+    clip_far = 100
+    im_size = (384, 384)
+    sample_rate = random.randint(30, 60) / 1000.0
+
+    # right back half
+    look_random = random.randint(45, 155) / 100.0
+    camera_pos = [(box_x1 + box_l) + clip_near, (box_y1 + box_y2) / 2, (box_z1 + box_w) + clip_near]
+    camera_lookat = [-look_random, 0, -1]
+
+    # left back half
+    look_random = random.randint(45, 155) / 100.0
+    camera_pos = [box_x1 - clip_near, (box_y1 + box_y2) / 2, box_z2 + clip_near]
+    camera_lookat = [look_random, 0, -1]
+
+    # right front half
+    look_random = random.randint(45, 155) / 100.0
+    camera_pos = [box_x2 + clip_near, (box_y1 + box_y2) / 2, box_z1 - clip_near]
+    camera_lookat = [-look_random, 0, 1]
+
+    # left front half
+    look_random = random.randint(45, 155) / 100.0
+    camera_pos = [box_x1 - clip_near, (box_y1 + box_y2) / 2, box_z1 - clip_near]
+    camera_lookat = [look_random, 0, 1]
+
+    scan_points, scan_points_seg, scan_points_label = vscan(model, sample_rate, camera_pos, camera_lookat,
+                                                            camera_up, im_size, clip_near, clip_far, save_vis=True)
+
+    du.save_points(scan_points, obj_bbox, "./out/test.obj")
+
+
+def test(obj_path):
+    model = objt.load_obj(obj_path)
 
     # scan obj
     # compute scan point TODO config and random point
     scan_point = []
     obj_bbox = objt.obj_getbbox(model['pts'])
-    print(obj_bbox)
 
     # center
     # scan_point.append([(obj_bbox[0] + obj_bbox[1]) / 2, (obj_bbox[2] + obj_bbox[3]) / 2, (obj_bbox[4] + obj_bbox[5]) / 2])
     # boundary
-    # scan_point.append([obj_bbox[0], (obj_bbox[2] + obj_bbox[3]) / 2, (obj_bbox[4] + obj_bbox[5]) / 2])
-    scan_point.append([obj_bbox[1] + 5, (obj_bbox[2] + obj_bbox[3]) / 2, (obj_bbox[4] + obj_bbox[5]) / 2])
-    # scan_point.append([(obj_bbox[0] + obj_bbox[1]) / 2, (obj_bbox[2] + obj_bbox[3]) / 2, obj_bbox[4]])
-    # scan_point.append([(obj_bbox[0] + obj_bbox[1]) / 2, (obj_bbox[2] + obj_bbox[3]) / 2, obj_bbox[5]])
-    # random
-    # for i in range(scan_point_num):
-    # scan_point.append([random.uniform(obj_bbox[0],obj_bbox[1]),random.uniform(obj_bbox[2],obj_bbox[3]),random.uniform(obj_bbox[4],obj_bbox[5])])
+    # right
+    # scan_point.append([obj_bbox[1] + 11, (obj_bbox[2] + obj_bbox[3]) / 2, (obj_bbox[4] + obj_bbox[5]) / 2])
+    # left
+    scan_point.append([obj_bbox[0] - 11, (obj_bbox[2] + obj_bbox[3]) / 2, (obj_bbox[4] + obj_bbox[5]) / 2])
+
 
     scan_points, scan_points_seg, scan_points_label = virtualscan(model, scan_point, 0.9)
     # print(len(scan_points))
@@ -262,4 +291,5 @@ def test():
 
 
 if __name__ == '__main__':
-    test()
+    test("/home/leon/Disk/dataset/Downloads/ShapeNetCore/ShapeNetCore.v2/03797390/" 
+         "1a1c0a8d4bad82169f0594e65f756cf5/models/model_normalized.obj")

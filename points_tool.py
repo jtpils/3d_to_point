@@ -308,3 +308,9 @@ def pc_retrans(item_list,trans_list,rotate_list):
 
     return item_list
     
+
+def get_box_whl(x_min, y_min, z_min, x_max, y_max, z_max):
+    box_w = z_max - z_min
+    box_h = y_max - y_min
+    box_l = x_max - x_min
+    return box_w, box_h, box_l

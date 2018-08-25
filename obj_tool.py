@@ -213,11 +213,9 @@ def load_obj(path):
                 line_s = line.strip().split(' ')
                 n_pts += int(line_s[1])
             if 'faces' in line:
-                print("len_faces += %d" % n_sub_faces)
                 n_sub_faces = 0
                 line_s = line.strip().split(' ')
                 n_faces += int(line_s[4])
-                print("n_faces += %d" % int(line_s[4]))
 
     # check read
     if n_pts == len(pts) and n_faces == len(faces):
