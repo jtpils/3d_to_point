@@ -45,7 +45,8 @@ def model_to_point(args):
         for obj_name in file_list:
             obj_path = os.path.join(path, obj_name)
             opengl_render_scanner.circle_scan(obj_path, args.output_dir)
-            shutil.move(obj_path, "/home/leon/Disk/dataset/ShapeNetCarObjScaned")
+            # shutil.move(obj_path, "/home/leon/Disk/dataset/ShapeNetCarObjScaned")
+            # break
         break
 
 

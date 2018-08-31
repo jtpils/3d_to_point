@@ -247,7 +247,7 @@ def sub_circle_random_scan(model, obj_bbox, sample_rate, camera_pos, camera_look
 
 
 def circle_scan(obj_path, out_dir):
-    model = objt.load_obj(obj_path)
+    model = objt.load_obj_without_outlier(obj_path)
     obj_bbox = objt.obj_getbbox(model['pts'])
     # print(obj_bbox)
     box_x1 = obj_bbox[0]

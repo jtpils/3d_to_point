@@ -236,6 +236,83 @@ def load_obj(path):
     return model
 
 
+def load_obj_without_outlier(path):
+    print("Load Obj File:", path)
+
+    obj_f = open(path, 'r')
+    obj_lines = obj_f.readlines()
+
+    n_pts = 0
+    n_faces = 0
+
+    pts = []
+    faces = []
+
+    # face_n_corners = 3int triangular faces are supported now.
+    # is_binary = False Only Non binary are supported now.
+
+    n_sub_faces = 0
+    # Read Obj File
+    for line in obj_lines:
+
+        if line[0] != '#':
+
+            # pts
+            line_s = line.strip().split(' ')
+            if line_s[0] == 'v':
+                pts.append([float(line_s[1]), float(line_s[2]), float(line_s[3]), 0.0])
+
+            # face
+            if line_s[0] == 'f':
+                line_s = line.strip().split(' ')
+                if '/' in line_s[2]:
+                    id_x = int(line_s[2].split('/')[0]) - 1
+                    id_y = int(line_s[3].split('/')[0]) - 1
+                    id_z = int(line_s[4].split('/')[0]) - 1
+                    pts[id_x][3] = 1.0
+                    pts[id_y][3] = 1.0
+                    pts[id_z][3] = 1.0
+                    faces.append([id_x, id_y, id_z])
+                else:
+                    id_x = int(line_s[2]) - 1
+                    id_y = int(line_s[3]) - 1
+                    id_z = int(line_s[4]) - 1
+                    pts[id_x][3] = 1.0
+                    pts[id_y][3] = 1.0
+                    pts[id_z][3] = 1.0
+                    faces.append([id_x, id_y, id_z])
+                n_sub_faces += 1
+
+        else:
+
+            if 'vertex positions' in line:
+                line_s = line.strip().split(' ')
+                n_pts += int(line_s[1])
+            if 'faces' in line:
+                n_sub_faces = 0
+                line_s = line.strip().split(' ')
+                n_faces += int(line_s[4])
+
+    # check read
+    # if n_pts == len(pts) and n_faces == len(faces):
+        # print("Check Read: Read Success(pts:" + str(n_pts) + ",faces:" + str(n_faces) + ")")
+        # n_faces = len(faces)
+    # else:
+    #     print("Check Read: Read Error. n_pts = %d, len_pts = %d, n_faces = %d, len_faces = %d" %
+    #           (n_pts, len(pts), n_faces, len(faces)))
+
+    pts_without_outlier = [point[0:3] for point in pts if point[3] == 1.0]
+    # Prepare data structures
+    model = {}
+
+    model['pts'] = np.array(pts_without_outlier)
+    model['faces'] = np.array(faces)
+
+    obj_f.close()
+
+    return model
+
+
 def load_labeled_obj(path, label, color):
     print("Load Obj File:", path)
 
