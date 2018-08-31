@@ -213,10 +213,22 @@ def save_points(scan_points, obj_bbox, out_path):
     with open(out_path, "w") as f:
         for p in box_points:
             f.writelines("v " + str(p[0]) + " " + str(p[1]) + " " + str(p[2]) + "\n")
+        f.writelines("l " + "1 " + "2\n")
+        f.writelines("l " + "2 " + "3\n")
+        f.writelines("l " + "3 " + "4\n")
+        f.writelines("l " + "4 " + "1\n")
+        f.writelines("l " + "5 " + "6\n")
+        f.writelines("l " + "6 " + "7\n")
+        f.writelines("l " + "7 " + "8\n")
+        f.writelines("l " + "8 " + "5\n")
+        f.writelines("l " + "1 " + "7\n")
+        f.writelines("l " + "2 " + "8\n")
+        f.writelines("l " + "3 " + "5\n")
+        f.writelines("l " + "4 " + "6\n")
         for p in scan_points:
             f.writelines("v " + str(p[0]) + " " + str(p[1]) + " " + str(p[2]) + "\n")
 
-    print("save_obj to", out_path)
+    # print("save_obj to", out_path)
 
 def save_dataset(scan_points,scan_points_seg,scan_points_label,scene_name,pts_path,seg_path,ply_parh,save_ply = True,use_color_map = False):
 

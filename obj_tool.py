@@ -218,12 +218,12 @@ def load_obj(path):
                 n_faces += int(line_s[4])
 
     # check read
-    if n_pts == len(pts) and n_faces == len(faces):
-        print("Check Read: Read Success(pts:" + str(n_pts) + ",faces:" + str(n_faces) + ")")
-        n_faces = len(faces)
-    else:
-        print("Check Read: Read Error. n_pts = %d, len_pts = %d, n_faces = %d, len_faces = %d" %
-              (n_pts, len(pts), n_faces, len(faces)))
+    # if n_pts == len(pts) and n_faces == len(faces):
+        # print("Check Read: Read Success(pts:" + str(n_pts) + ",faces:" + str(n_faces) + ")")
+        # n_faces = len(faces)
+    # else:
+    #     print("Check Read: Read Error. n_pts = %d, len_pts = %d, n_faces = %d, len_faces = %d" %
+    #           (n_pts, len(pts), n_faces, len(faces)))
 
     # Prepare data structures
     model = {}

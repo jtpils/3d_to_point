@@ -1,5 +1,6 @@
 import random
 
+import os
 import numpy as np
 import scipy.misc
 
@@ -13,8 +14,8 @@ import data_utils as du
 
 def vscan(model, sample_ratio, camera_position, camera_lookat, camera_up, im_size=(400, 400), clip_near_set=10.0,
           clip_far_set=25.0, save_vis=True):
-    print('vscan samplerate:', sample_ratio)
-    print("\nVirtualScan: camera_position:", camera_position, "camera_lookat: ", camera_lookat, "camera_up", camera_up)
+    # print('vscan samplerate:', sample_ratio)
+    # print("\nVirtualScan: camera_position:", camera_position, "camera_lookat: ", camera_lookat, "camera_up", camera_up)
 
     R, T, RT = renderer.Compute_RT_LU([0, 0, 0], camera_lookat, camera_up, True)
 
@@ -81,8 +82,8 @@ def vscan(model, sample_ratio, camera_position, camera_lookat, camera_up, im_siz
     visable_num = len(visable_point)
     sample_num = int(visable_num * sample_ratio)
 
-    print("visable_num:", visable_num, "/", im_size[0] * im_size[1], "Sample ratio:", sample_ratio, "Sample num:",
-          sample_num)
+    # print("visable_num:", visable_num, "/", im_size[0] * im_size[1], "Sample ratio:", sample_ratio, "Sample num:",
+    #       sample_num)
 
     samplelist = random.sample(range(visable_num - 1), sample_num)
 
@@ -154,9 +155,9 @@ def virtualscan(model, scan_points, sample_rate):
         # Back
         # scan_set_list.append([scp[0], scp[1], scp[2] - clip_near, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0])
         # left
-        scan_set_list.append([scp[0] - clip_near, scp[1], scp[2], 1.0, 0.0, 0.0, 0.0, 1.0, 0.0])
+        # scan_set_list.append([scp[0] - clip_near, scp[1], scp[2], 1.0, 0.0, 0.0, 0.0, 1.0, 0.0])
         # right use this
-        # scan_set_list.append([scp[0] + clip_near, scp[1], scp[2], -1.0, 0.0, 0.0, 0.0, 1.0, 0.0])
+        scan_set_list.append([scp[0] + clip_near, scp[1], scp[2], -1.0, 0.0, 0.0, 0.0, 1.0, 0.0])
 
 
     # scan_ori = random.randint(0,1)
@@ -224,9 +225,31 @@ def virtualscan(model, scan_points, sample_rate):
     return scan_points_m, scan_points_seg_m, scan_points_label_m
 
 
-def circle_scan(obj_path):
+def sub_circle_random_scan(model, obj_bbox, sample_rate, camera_pos, camera_lookat, out_dir, obj_name, pos_name):
+    camera_up = [0, 1, 0]
+    clip_near = 0
+    clip_far = 100
+    im_size = (384, 384)
+
+    count_while = 0
+    while True:
+        scan_points, scan_points_seg, scan_points_label = vscan(model, sample_rate, camera_pos, camera_lookat,
+                                                                camera_up, im_size, clip_near, clip_far, save_vis=False)
+        if len(scan_points) is not 0:
+            obj_out_path = os.path.join(out_dir, obj_name + pos_name + '.obj')
+            du.save_points(scan_points, obj_bbox, obj_out_path)
+            break
+        else:
+            count_while += 1
+            if count_while > 10:
+                print(pos_name + " can't scan point")
+                break
+
+
+def circle_scan(obj_path, out_dir):
     model = objt.load_obj(obj_path)
     obj_bbox = objt.obj_getbbox(model['pts'])
+    # print(obj_bbox)
     box_x1 = obj_bbox[0]
     box_y1 = obj_bbox[2]
     box_z1 = obj_bbox[4]
@@ -235,36 +258,78 @@ def circle_scan(obj_path):
     box_z2 = obj_bbox[5]
     box_w, box_h, box_l = points_tool.get_box_whl(box_x1, box_y1, box_z1, box_x2, box_y2, box_z2)
 
-    camera_up = [0, 1, 0]
-    clip_near = 1
-    clip_far = 100
-    im_size = (384, 384)
-    sample_rate = random.randint(30, 60) / 1000.0
+    tan_sita = 0.20281
+    obj_name = os.path.basename(obj_path).split('.')[0]
 
+    dis_obj_cam = 1
     # right back half
+    pos_name = '_right_back_half'
+    sample_rate = random.randint(30, 60) / 1000.0
     look_random = random.randint(45, 155) / 100.0
-    camera_pos = [(box_x1 + box_l) + clip_near, (box_y1 + box_y2) / 2, (box_z1 + box_w) + clip_near]
+    camera_pos = [(box_x1 + box_l) + dis_obj_cam, (box_y1 + box_y2) / 2, (box_z1 + box_w) + dis_obj_cam]
     camera_lookat = [-look_random, 0, -1]
+    sub_circle_random_scan(model, obj_bbox, sample_rate, camera_pos, camera_lookat, out_dir, obj_name, pos_name)
 
     # left back half
+    pos_name = '_left_back_half'
+    sample_rate = random.randint(30, 60) / 1000.0
     look_random = random.randint(45, 155) / 100.0
-    camera_pos = [box_x1 - clip_near, (box_y1 + box_y2) / 2, box_z2 + clip_near]
+    camera_pos = [box_x1 - dis_obj_cam, (box_y1 + box_y2) / 2, box_z2 + dis_obj_cam]
     camera_lookat = [look_random, 0, -1]
+    sub_circle_random_scan(model, obj_bbox, sample_rate, camera_pos, camera_lookat, out_dir, obj_name, pos_name)
+
 
     # right front half
+    pos_name = '_right_front_half'
+    sample_rate = random.randint(30, 60) / 1000.0
     look_random = random.randint(45, 155) / 100.0
-    camera_pos = [box_x2 + clip_near, (box_y1 + box_y2) / 2, box_z1 - clip_near]
+    camera_pos = [box_x2 + dis_obj_cam, (box_y1 + box_y2) / 2, box_z1 - dis_obj_cam]
     camera_lookat = [-look_random, 0, 1]
+    sub_circle_random_scan(model, obj_bbox, sample_rate, camera_pos, camera_lookat, out_dir, obj_name, pos_name)
 
     # left front half
+    pos_name = '_left_front_half'
+    sample_rate = random.randint(30, 60) / 1000.0
     look_random = random.randint(45, 155) / 100.0
-    camera_pos = [box_x1 - clip_near, (box_y1 + box_y2) / 2, box_z1 - clip_near]
+    camera_pos = [box_x1 - dis_obj_cam, (box_y1 + box_y2) / 2, box_z1 - dis_obj_cam]
     camera_lookat = [look_random, 0, 1]
+    sub_circle_random_scan(model, obj_bbox, sample_rate, camera_pos, camera_lookat, out_dir, obj_name, pos_name)
 
-    scan_points, scan_points_seg, scan_points_label = vscan(model, sample_rate, camera_pos, camera_lookat,
-                                                            camera_up, im_size, clip_near, clip_far, save_vis=True)
+    # left half
+    pos_name = '_left_half'
+    sample_rate = random.randint(30, 60) / 1000.0
+    dis_obj_cam = box_w / 2 / tan_sita
+    look_random = random.randint(-30, 30) / 100.0
+    camera_pos = [box_x1 - dis_obj_cam, (box_y1 + box_y2) / 2, (box_z1 + box_z2) / 2]
+    camera_lookat = [1, 0, look_random]
+    sub_circle_random_scan(model, obj_bbox, sample_rate, camera_pos, camera_lookat, out_dir, obj_name, pos_name)
 
-    du.save_points(scan_points, obj_bbox, "./out/test.obj")
+    # right
+    pos_name = '_right_half'
+    sample_rate = random.randint(30, 60) / 1000.0
+    dis_obj_cam = box_w / 2 / tan_sita
+    look_random = random.randint(-30, 30) / 100.0
+    camera_pos = [box_x2 + dis_obj_cam, (box_y1 + box_y2) / 2, (box_z1 + box_z2) / 2]
+    camera_lookat = [-1, 0, look_random]
+    sub_circle_random_scan(model, obj_bbox, sample_rate, camera_pos, camera_lookat, out_dir, obj_name, pos_name)
+
+    # front half
+    pos_name = '_front_half'
+    sample_rate = random.randint(30, 60) / 1000.0
+    dis_obj_cam = box_l / 2 / tan_sita
+    look_random = random.randint(-25, 25) / 100.0
+    camera_pos = [(box_x1 + box_x2) / 2, (box_y1 + box_y2) / 2, box_z1 - dis_obj_cam]
+    camera_lookat = [look_random, 0, 1]
+    sub_circle_random_scan(model, obj_bbox, sample_rate, camera_pos, camera_lookat, out_dir, obj_name, pos_name)
+
+    # back half
+    pos_name = '_back_half'
+    sample_rate = random.randint(30, 60) / 1000.0
+    dis_obj_cam = box_l / 2 / tan_sita
+    look_random = random.randint(-25, 25) / 100.0
+    camera_pos = [(box_x1 + box_x2) / 2, (box_y1 + box_y2) / 2, box_z2 + dis_obj_cam]
+    camera_lookat = [look_random, 0, -1]
+    sub_circle_random_scan(model, obj_bbox, sample_rate, camera_pos, camera_lookat, out_dir, obj_name, pos_name)
 
 
 def test(obj_path):
@@ -274,22 +339,29 @@ def test(obj_path):
     # compute scan point TODO config and random point
     scan_point = []
     obj_bbox = objt.obj_getbbox(model['pts'])
+    print(obj_bbox)
 
     # center
     # scan_point.append([(obj_bbox[0] + obj_bbox[1]) / 2, (obj_bbox[2] + obj_bbox[3]) / 2, (obj_bbox[4] + obj_bbox[5]) / 2])
     # boundary
     # right
-    # scan_point.append([obj_bbox[1] + 11, (obj_bbox[2] + obj_bbox[3]) / 2, (obj_bbox[4] + obj_bbox[5]) / 2])
+    scan_point.append([obj_bbox[1] + 3, (obj_bbox[2] + obj_bbox[3]) / 2, (obj_bbox[4] + obj_bbox[5]) / 2])
     # left
-    scan_point.append([obj_bbox[0] - 11, (obj_bbox[2] + obj_bbox[3]) / 2, (obj_bbox[4] + obj_bbox[5]) / 2])
-
+    # scan_point.append([obj_bbox[0] - 1, (obj_bbox[2] + obj_bbox[3]) / 2, (obj_bbox[4] + obj_bbox[5]) / 2])
 
     scan_points, scan_points_seg, scan_points_label = virtualscan(model, scan_point, 0.9)
     # print(len(scan_points))
     du.save_dataset(scan_points, scan_points_seg, scan_points_label, "sense_name", "pts", "seg", "plyshow", save_ply=True,
                     use_color_map=False)
 
+    pos_name = '_right_half'
+    sample_rate = 0.5
+    dis_obj_cam = 1
+    look_random = random.randint(-30, 30) / 100.0
+    camera_pos = [obj_bbox[1] + 3, (obj_bbox[2] + obj_bbox[3]) / 2, obj_bbox[4] -3]
+    camera_lookat = [-1, 0, 1]
+    sub_circle_random_scan(model, obj_bbox, sample_rate, camera_pos, camera_lookat, "./", "test", pos_name)
+
 
 if __name__ == '__main__':
-    test("/home/leon/Disk/dataset/Downloads/ShapeNetCore/ShapeNetCore.v2/03797390/" 
-         "1a1c0a8d4bad82169f0594e65f756cf5/models/model_normalized.obj")
+    test("/home/leon/Disk/dataset/BadObj/4eb5ec5502561124875fb780d36841f.obj")

@@ -1,4 +1,5 @@
 import os
+import shutil
 import sys
 import argparse
 import opengl_render_scanner
@@ -43,9 +44,8 @@ def model_to_point(args):
     for path, dir_list, file_list in os.walk(args.model_dir):
         for obj_name in file_list:
             obj_path = os.path.join(path, obj_name)
-            print(obj_path)
-            opengl_render_scanner.circle_scan(obj_path)
-            break
+            opengl_render_scanner.circle_scan(obj_path, args.output_dir)
+            shutil.move(obj_path, "/home/leon/Disk/dataset/ShapeNetCarObjScaned")
         break
 
 
