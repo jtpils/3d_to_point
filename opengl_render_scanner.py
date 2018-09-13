@@ -143,84 +143,26 @@ def vscan(model, sample_ratio, camera_position, camera_lookat, camera_up, im_siz
 def virtualscan(model, scan_points, sample_rate):
     scan_set_list = []
     scan_point_list = []
-    # clip_near = 100
-    # clip_far = 150
     clip_near = 1
     clip_far = 100
     im_size = (384, 384)
 
     for scp in scan_points:
-        # front
-        # scan_set_list.append([scp[0], scp[1], scp[2] + clip_near, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0])
-        # Back
-        # scan_set_list.append([scp[0], scp[1], scp[2] - clip_near, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0])
-        # left
-        # scan_set_list.append([scp[0] - clip_near, scp[1], scp[2], 1.0, 0.0, 0.0, 0.0, 1.0, 0.0])
         # right use this
         scan_set_list.append([scp[0] + clip_near, scp[1], scp[2], -1.0, 0.0, 0.0, 0.0, 1.0, 0.0])
-
-
-    # scan_ori = random.randint(0,1)
-    # add_scan = 0
-    # scan_h = 0.4 + random.randint(0,12)*1.0/10
-    # scan_h_l = 0.2 + random.randint(0,10)*1.0/10
-    # scan_h_h = 1.3 + random.randint(0,10)*1.0/10
-
-    # if scan_ori:
-
-    #	if add_scan:
-    #		#front
-    #		scan_set_list.append([scp[0],scan_h_l,scp[1] + clip_near,0.0,0.0,-1.0,0.0,1.0,0.0])
-    #		scan_set_list.append([scp[0],scan_h_h,scp[1] + clip_near,0.0,0.0,-1.0,0.0,1.0,0.0])
-    #		#Back
-    #		scan_set_list.append([scp[0],scan_h_l,scp[1] - clip_near,0.0,0.0,1.0,0.0,1.0,0.0])
-    #		scan_set_list.append([scp[0],scan_h_h,scp[1] - clip_near,0.0,0.0,1.0,0.0,1.0,0.0])
-
-    #	else:
-    #		#front
-    #		scan_set_list.append([scp[0],scan_h,scp[1] + clip_near,0.0,0.0,-1.0,0.0,1.0,0.0])
-    #		#Back
-    #		scan_set_list.append([scp[0],scan_h,scp[1] - clip_near,0.0,0.0,1.0,0.0,1.0,0.0])
-
-    # else:
-
-    #	if add_scan:
-    #		#left
-    #		scan_set_list.append([scp[0] - clip_near,scan_h_l,scp[1],1.0,0.0,0.0,0.0,1.0,0.0])
-    #		scan_set_list.append([scp[0] - clip_near,scan_h_h,scp[1],1.0,0.0,0.0,0.0,1.0,0.0])
-    #		#right
-    #		scan_set_list.append([scp[0] + clip_near,scan_h_l,scp[1],-1.0,0.0,0.0,0.0,1.0,0.0])
-    #		scan_set_list.append([scp[0] + clip_near,scan_h_h,scp[1],-1.0,0.0,0.0,0.0,1.0,0.0])
-
-    #	else:
-    #		#left
-    #		scan_set_list.append([scp[0] - clip_near,scan_h,scp[1],1.0,0.0,0.0,0.0,1.0,0.0])
-    #		#right
-    #		scan_set_list.append([scp[0] + clip_near,scan_h,scp[1],-1.0,0.0,0.0,0.0,1.0,0.0])
 
     for k, scset in enumerate(scan_set_list):
         camera_position = [scset[0], scset[1], scset[2]]
         camera_lookat = [scset[3], scset[4], scset[5]]
         camera_up = [scset[6], scset[7], scset[8]]
 
-        # For Test
-        # camera_position = [25.5,7.5,60.5]
-        # camera_lookat = [0.0,0.0,-1.0]
-        # camera_up = [0.0,1.0,0.0]
-
         scan_points, scan_points_seg, scan_points_label = vscan(model, sample_rate, camera_position, camera_lookat,
                                                                 camera_up, im_size, clip_near, clip_far, save_vis=True)
 
         scan_point_list.append([scan_points, scan_points_seg, scan_points_label])
 
-    # For Test
-    # ptst.save_ply(scan_points_m, scan_point_seg, "./output/vis_" + str(k) + ".ply")
-
     # merge
     scan_points_m, scan_points_seg_m, scan_points_label_m = ptst.scan_pc_merge(scan_point_list)
-
-    # For Test
-    # ptst.save_ply(scan_points_m, scan_points_seg_m, "./output/vis.ply")
 
     return scan_points_m, scan_points_seg_m, scan_points_label_m
 
